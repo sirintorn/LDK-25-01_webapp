@@ -15,10 +15,11 @@ import { LineBalancingController } from '@/services/controllers/line_balancing_c
 import { Button, Input, Select } from '@headlessui/react';
 import { AdjustmentsVerticalIcon, UserIcon, UserGroupIcon, UserPlusIcon, ArrowRightStartOnRectangleIcon, TrashIcon, ClockIcon, ChatBubbleBottomCenterTextIcon, PresentationChartLineIcon, HandRaisedIcon } from '@heroicons/react/24/outline'
 import { ChartData, ChartOptions } from 'chart.js';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 const Linebalancing = () => {
+    const searchParams = useSearchParams();
     const router = useRouter();
 
     const [user, setUser] = useState<any>();
@@ -116,13 +117,28 @@ const Linebalancing = () => {
         },
     };
 
+    const uid = searchParams.get('uid') || null;
+    const wid = searchParams.get('wid') || null;
+
     useEffect(() => {
         AppConfig.forceInspectLogin();
         if (!user) {
             appController.init(AppSession.getUser(), AppSession.getWorkspaces());
-            controller.init(appController.user._id, appController.workspaces[appController.targetWorkspace]._id);
+            
+            if(uid && wid) controller.init(uid, wid);
+            else controller.init(appController.user._id, appController.workspaces[appController.targetWorkspace]._id);
+
             setUser(appController.user);
             setWorkspaces(appController.workspaces);
+        }
+
+        const last_config = AppSession.getLastConfig();
+        if(last_config && !isNaN(last_config.target_line)){
+            controller.target_line = last_config.target_line;
+            if(last_config && !isNaN(last_config.target_model)){
+                controller.target_model = last_config.target_model;
+                syncHeader();
+            }
         }
 
         if (!uiUpdater) {
@@ -159,8 +175,7 @@ const Linebalancing = () => {
         router.push(`/timecapture?new=1&uid=${appController.user._id}&wid=${appController.workspaces[appController.targetWorkspace]._id}`);
     }
 
-    function onChangeLine(event: any) {
-        controller.target_line = Number(event.target.value ?? -1);
+    function syncHeader(){
         controller.syncHeader().then(() => {
             AppSession.storeLastConfig({
                 target_line: controller.target_line,
@@ -180,25 +195,14 @@ const Linebalancing = () => {
         });
     }
 
+    function onChangeLine(event: any) {
+        controller.target_line = Number(event.target.value ?? -1);
+        syncHeader();
+    }
+
     function onChangeModel(event: any) {
         controller.target_model = Number(event.target.value ?? -1);
-        controller.syncHeader().then(() => {
-            AppSession.storeLastConfig({
-                target_line: controller.target_line,
-                target_model: controller.target_model
-            });
-            setTaktTime(controller.line_header.takt_time);
-            setUnitPerHour(controller.line_header.unit_per_hour);
-            if (controller.line_details) {
-                let bools: boolean[] = [];
-                controller.line_details.forEach(() => {
-                    bools.push(false);
-                });
-                setLineDetailsChecks(bools);
-                const chartData = ChartGen.smartGenerateChartData(controller.line_header.takt_time ?? 0, controller.line_details ?? []);
-                setChartData(chartData);
-            }
-        });
+        syncHeader();
     }
 
     function onChangeTaktTime(event: any) {
@@ -259,7 +263,7 @@ const Linebalancing = () => {
                     <div className="grid grid-cols-5 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700">Line</label>
-                            <Select onChange={onChangeLine} className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                            <Select value={controller.target_line} onChange={onChangeLine} className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
                                 <option value="">Select</option>
                                 {lines?.map((obj, i) => {
                                     return (
@@ -272,7 +276,7 @@ const Linebalancing = () => {
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700">Model/Style</label>
-                            <Select onChange={onChangeModel} className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                            <Select value={controller.target_model} onChange={onChangeModel} className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
                                 <option value="">Select</option>
                                 {models?.map((obj, i) => {
                                     return (
@@ -308,7 +312,7 @@ const Linebalancing = () => {
                             <Input
                                 type="number"
                                 className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                                value={lineHeader ? lineHeader.total_cycle_time.toFixed(3) : ''}
+                                value={totalCycleTime ? totalCycleTime.toFixed(3) : ''}
                                 disabled={true}
                             />
                         </div>
