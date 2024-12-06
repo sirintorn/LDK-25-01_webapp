@@ -20,7 +20,7 @@ export class ChartGen {
 
                 for (let key2 in items) {
                     let element: ILineDetail = items[key2];
-                    let _title = element.step_code;
+                    let _title = element.station;
                     /*if (element.split_no) {
                         _title = `[split ${element.split_no}] ` + _title;
                     }*/
@@ -49,9 +49,9 @@ export class ChartGen {
 
     static smartGenerateChartData(taktTime: number, lineDetails: ILineDetail[]) {
         //if it has real data, then visualize it.
-        let empSkills: any = {};
-        let workStations: any[] = [];
-        let works: any[] = [];
+        const empSkills: any = {};
+        const workStations: any[] = [];
+        const works: any[] = [];
         let colorCount = 0;
         let colorPallete: ColorPalette;
         let newChartData: ChartData<'bar'>;
@@ -72,7 +72,7 @@ export class ChartGen {
                         workStations.push(key);
                     }
 
-                    let _title = item.step_code;
+                    const _title = item.station;
                     /*if (item.split_no) {
                         _title = `[split ${item.split_no}] ` + _title;
                     }*/

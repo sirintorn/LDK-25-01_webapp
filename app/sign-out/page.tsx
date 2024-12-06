@@ -2,7 +2,7 @@
 'use client'
 
 import { AppSession } from "@/services/configs/appSession";
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 
 
 const signOutPage = () => {
@@ -12,7 +12,9 @@ const signOutPage = () => {
     });
 
     return (
-        <></>
+        <>
+            <div><span>Signing out...</span></div>
+        </>
     );
 }
 

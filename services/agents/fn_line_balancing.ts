@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable prefer-const */
-import { ILineDetail } from '../../models/m_line_detail';
+import { ILineDetail } from '@/models/m_line_detail';
 
 export class FnLineBalancing{
 
@@ -127,7 +127,8 @@ export class FnLineBalancing{
     //9.
     static detailStatus(takttime: number, targetDetail: ILineDetail, lineDetails: ILineDetail[]){
         let result = {
-            bg: 'white'
+            bg: 'white',
+            tot_ct: 0
         };
 
         if(targetDetail && lineDetails){
@@ -137,21 +138,22 @@ export class FnLineBalancing{
             const val = (tot_ct / (!isNaN(takttime) ? takttime : -1)) * 100;
 
             //9.1
-            if(val > takttime){
+            if(val > (100)){
                 result.bg = 'red';
             }
             //9.2
-            else if(val == takttime){
+            else if(val == (100)){
                 result.bg = 'yellow';
             }
             //9.3
-            else if( val > (0.8 * takttime) && val < (1.0 * takttime)){
+            else if( val > (80) && val < (100)){
                 result.bg = 'green';
             }
             //9.4
-            else if(val <= (0.8 * takttime)){
+            else if(val <= (80)){
                 result.bg = 'orange';
             }
+            result.tot_ct = val;
         }
 
         return result

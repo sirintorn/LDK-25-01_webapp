@@ -1,3 +1,4 @@
+'use client';
 import React, { useRef, useEffect } from 'react';
 import {
     Chart,
@@ -16,8 +17,8 @@ import annotationPlugin from 'chartjs-plugin-annotation';
 Chart.register(BarController, BarElement, CategoryScale, LinearScale, Title, Tooltip, Legend, annotationPlugin, PointElement);
 
 interface BarChartProps {
-    data: Chart.ChartData<'bar'>;
-    options?: Chart.ChartOptions<'bar'>;
+    data: any;
+    options?: any;
 }
 
 const BarChart: React.FC<BarChartProps> = ({ data, options }) => {

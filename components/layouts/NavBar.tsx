@@ -1,5 +1,6 @@
 /* eslint-disable prefer-const */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+'use client';
 import React, { useEffect } from "react";
 import { Disclosure, DisclosureButton, DisclosurePanel, Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
@@ -45,7 +46,7 @@ const NavBar = (data: any) => {
           </div>
           <div className="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
             <div className="flex flex-shrink-0 items-center">
-              <Image
+              <img
                 alt="Your Company"
                 src={"/assets/logos/wireframe-small.png"}
                 className="h-8 w-auto"
@@ -95,7 +96,7 @@ const NavBar = (data: any) => {
                   <MenuButton className="relative flex items-center rounded-full font-medium justify-center bg-gray-800 text-sm text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800">
                     <span className="absolute -inset-1.5" />
                     <span className="sr-only">Open user menu</span>
-                    <Image
+                    <img
                       alt=""
                       src={data.user.user_image ? data.user.user_image : "/assets/images/user.png"}
                       className="h-8 w-8 rounded-full me-3"

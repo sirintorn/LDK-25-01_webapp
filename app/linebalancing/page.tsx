@@ -6,7 +6,6 @@ import BarChart from '@/components/charts/BarChart';
 import NavBar from '@/components/layouts/NavBar';
 import Loading from '@/components/misc/Loading';
 import { ChartGen } from '@/services/agents/chart_gen';
-import { ColorPalette } from '@/services/agents/color_pellete';
 import { FnLineBalancing } from '@/services/agents/fn_line_balancing';
 import { AppSession } from '@/services/configs/appSession';
 import { AppConfig } from '@/services/configs/config';
@@ -15,12 +14,11 @@ import { LineBalancingController } from '@/services/controllers/line_balancing_c
 import { Button, Input, Select } from '@headlessui/react';
 import { AdjustmentsVerticalIcon, UserIcon, UserGroupIcon, UserPlusIcon, ArrowRightStartOnRectangleIcon, TrashIcon, ClockIcon, ChatBubbleBottomCenterTextIcon, PresentationChartLineIcon, HandRaisedIcon } from '@heroicons/react/24/outline'
 import { ChartData, ChartOptions } from 'chart.js';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import React, { Suspense, useEffect, useState } from 'react';
 
 const Linebalancing = () => {
     const searchParams = useSearchParams();
-    const router = useRouter();
 
     const [user, setUser] = useState<any>();
     const [workspaces, setWorkspaces] = useState<any[]>([]);
@@ -112,7 +110,7 @@ const Linebalancing = () => {
             },
             y: {
                 stacked: true,
-                suggestedMax: ((controller.line_header ? controller.line_header.takt_time:  0)+1)
+                suggestedMax: ((controller.line_header ? controller.line_header.takt_time : 0) + 1)
             },
         },
     };
@@ -124,8 +122,8 @@ const Linebalancing = () => {
         AppConfig.forceInspectLogin();
         if (!user) {
             appController.init(AppSession.getUser(), AppSession.getWorkspaces());
-            
-            if(uid && wid) controller.init(uid, wid);
+
+            if (uid && wid) controller.init(uid, wid);
             else controller.init(appController.user._id, appController.workspaces[appController.targetWorkspace]._id);
 
             setUser(appController.user);
@@ -172,10 +170,10 @@ const Linebalancing = () => {
     }
 
     function onClickAddDetail(event: any) {
-        router.push(`/timecapture?new=1&uid=${uid}&wid=${wid}&hid=${lineHeader._id}`);
+        window.location.assign(`/timecapture?new=1&uid=${uid}&wid=${wid}&hid=${lineHeader._id}`);
     }
 
-    function syncHeader(){
+    function syncHeader() {
         controller.syncHeader().then(() => {
             AppSession.storeLastConfig({
                 target_line: controller.target_line,
@@ -184,7 +182,7 @@ const Linebalancing = () => {
             setTaktTime(controller.line_header ? controller.line_header.takt_time : 0);
             setUnitPerHour(controller.line_header ? controller.line_header.unit_per_hour : 0);
             if (controller.line_details) {
-                let bools: boolean[] = [];
+                const bools: boolean[] = [];
                 controller.line_details.forEach(() => {
                     bools.push(false);
                 });
@@ -236,7 +234,7 @@ const Linebalancing = () => {
     }
 
     function onClickDelete() {
-        let ids = [];
+        const ids = [];
         if (confirm('Are you sure?')) {
             try {
                 for (let i = lineDetailsChecks!.length - 1; i > -1; i--) {
@@ -423,7 +421,7 @@ const Linebalancing = () => {
                                                         {appController.user.display_name ?? '-'}
                                                     </td>
                                                     <td style={{ background: FnLineBalancing.detailStatus(taktTime ?? 0, obj, lineDetails).bg }} className="px-4 py-2 border text-center colSpan-9">
-                                                        {FnLineBalancing.detailStatus(taktTime ?? 0, obj, lineDetails).bg}
+                                                        {FnLineBalancing.detailStatus(taktTime ?? 0, obj, lineDetails).tot_ct.toFixed(2)}%
                                                     </td>
                                                     <td className="px-4 py-2 border text-center colSpan-9">
                                                         <Input
@@ -445,4 +443,12 @@ const Linebalancing = () => {
     );
 };
 
-export default Linebalancing;
+const LineBalancingPage: React.FC = () => {
+    return (
+        <Suspense fallback={<>Loading...</>}>
+            <Linebalancing></Linebalancing>
+        </Suspense>
+    );
+}
+
+export default LineBalancingPage;

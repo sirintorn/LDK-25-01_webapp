@@ -50,8 +50,8 @@ export class ColorPalette{
 
     generateColorArrays(length: number, start_index: number){
         if(length > 0){
-            let arr: string[] = [];
-            let startColor: string = this.getColor(start_index);
+            const arr: string[] = [];
+            const startColor: string = this.getColor(start_index);
             let currentColor: string = startColor;
 
             for (let i = 0; i < length; i++) {
