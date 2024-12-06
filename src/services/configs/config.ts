@@ -3,8 +3,8 @@ import { AppSession } from "./appSession";
 
 export class AppConfig{
     
-    static ENV: string = process.env.NODE_ENV || "development";
-    //static ENV: string = "production";
+    //static ENV: string = process.env.NODE_ENV || "development";
+    static ENV: string = "production";
     
     static APP_VERSION: string = 'v0.01.00 20241206';
     static APP_NAME: string = 'Lean Digital Tool Kits';
