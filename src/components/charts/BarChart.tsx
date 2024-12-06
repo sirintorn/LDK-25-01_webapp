@@ -8,10 +8,12 @@ import {
     Title,
     Tooltip,
     Legend,
+    PointElement,
 } from 'chart.js';
+import annotationPlugin from 'chartjs-plugin-annotation';
 
 // Register required Chart.js components
-Chart.register(BarController, BarElement, CategoryScale, LinearScale, Title, Tooltip, Legend);
+Chart.register(BarController, BarElement, CategoryScale, LinearScale, Title, Tooltip, Legend, annotationPlugin, PointElement);
 
 interface BarChartProps {
     data: Chart.ChartData<'bar'>;

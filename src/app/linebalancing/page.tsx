@@ -5,6 +5,8 @@
 import BarChart from '@/components/charts/BarChart';
 import NavBar from '@/components/layouts/NavBar';
 import Loading from '@/components/misc/Loading';
+import { ChartGen } from '@/services/agents/chart_gen';
+import { ColorPalette } from '@/services/agents/color_pellete';
 import { FnLineBalancing } from '@/services/agents/fn_line_balancing';
 import { AppSession } from '@/services/configs/appSession';
 import { AppConfig } from '@/services/configs/config';
@@ -12,9 +14,13 @@ import { AppController } from '@/services/controllers/app_controller';
 import { LineBalancingController } from '@/services/controllers/line_balancing_controller';
 import { Button, Input, Select } from '@headlessui/react';
 import { AdjustmentsVerticalIcon, UserIcon, UserGroupIcon, UserPlusIcon, ArrowRightStartOnRectangleIcon, TrashIcon, ClockIcon, ChatBubbleBottomCenterTextIcon, PresentationChartLineIcon, HandRaisedIcon } from '@heroicons/react/24/outline'
+import { ChartData, ChartOptions } from 'chart.js';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 const Linebalancing = () => {
+    const router = useRouter();
+
     const [user, setUser] = useState<any>();
     const [workspaces, setWorkspaces] = useState<any[]>([]);
     const [appController, setAppController] = useState<AppController>(new AppController());
@@ -39,26 +45,73 @@ const Linebalancing = () => {
 
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
+    const [chartData, setChartData] = useState<ChartData<'bar'>>(ChartGen.smartGenerateChartData(0, []));
+
     // Define the configuration for the chart
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    const data = {
-        labels: ['January', 'February', 'March', 'April', 'May'],
-        datasets: [
-            {
-                label: 'Sales',
-                data: [12, 19, 3, 5, 2],
-                backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                borderColor: 'rgba(75, 192, 192, 1)',
-                borderWidth: 1,
-            },
-        ],
-    };
 
-    const options = {
+    const options: ChartOptions<'bar'> = {
+        /*onClick(event, elements, chart) {
+            if (elements.length > 0) {
+                let e = elements[0] as any;
+                const index = e.element.$context.index;
+                const barLabels = chart.data.labels;
+                const empLabel = barLabels![index] as string;
+                const EmpID = empLabel.split(':')[0];
+                controller.empLocation = `${EmpID}`;
+                controller.sortHilightDetailsToTop();
+                //window.location.href = `#firstrow`;
+                window.location.href = `#${EmpID}`;
+            } else {
+                controller.empLocation = null;
+                controller.sortDetailsBySerialNumber();
+                console.log('out')
+            }
+        },*/
+        plugins: {
+            title: {
+                display: true,
+                text: 'Yamazumi Chart with Stage Time',
+            },
+            tooltip: {
+                enabled: true,
+                mode: 'point',
+                intersect: true,
+            },
+            legend: {
+                display: false,
+                position: 'top',
+            },
+            colors: {
+                enabled: false,
+                forceOverride: true
+            },
+            annotation: {
+                annotations: {
+                    Line: {
+                        type: 'line',
+                        yMin: controller.line_header ? controller.line_header.takt_time : 0,
+                        yMax: controller.line_header ? controller.line_header.takt_time : 0,
+                        borderColor: 'rgb(255, 0, 0)',
+                        borderWidth: 2,
+                    }
+                }
+            }
+        },
         responsive: true,
+        maintainAspectRatio: true,
         scales: {
+            x: {
+                stacked: true,
+                ticks: {
+                    maxRotation: 90,
+                    minRotation: 15
+                },
+                beginAtZero: true
+            },
             y: {
-                beginAtZero: true,
+                stacked: true,
+                suggestedMax: ((controller.line_header ? controller.line_header.takt_time:  0)+1)
             },
         },
     };
@@ -103,12 +156,16 @@ const Linebalancing = () => {
     }
 
     function onClickAddDetail(event: any) {
-        window.location.assign('/timecapture');
+        router.push(`/timecapture?new=1&uid=${appController.user._id}&wid=${appController.workspaces[appController.targetWorkspace]._id}`);
     }
 
     function onChangeLine(event: any) {
         controller.target_line = Number(event.target.value ?? -1);
         controller.syncHeader().then(() => {
+            AppSession.storeLastConfig({
+                target_line: controller.target_line,
+                target_model: controller.target_model
+            });
             setTaktTime(controller.line_header ? controller.line_header.takt_time : 0);
             setUnitPerHour(controller.line_header ? controller.line_header.unit_per_hour : 0);
             if (controller.line_details) {
@@ -117,6 +174,8 @@ const Linebalancing = () => {
                     bools.push(false);
                 });
                 setLineDetailsChecks(bools);
+                const chartData = ChartGen.smartGenerateChartData(controller.line_header.takt_time ?? 0, controller.line_details ?? []);
+                setChartData(chartData);
             }
         });
     }
@@ -124,6 +183,10 @@ const Linebalancing = () => {
     function onChangeModel(event: any) {
         controller.target_model = Number(event.target.value ?? -1);
         controller.syncHeader().then(() => {
+            AppSession.storeLastConfig({
+                target_line: controller.target_line,
+                target_model: controller.target_model
+            });
             setTaktTime(controller.line_header.takt_time);
             setUnitPerHour(controller.line_header.unit_per_hour);
             if (controller.line_details) {
@@ -132,6 +195,8 @@ const Linebalancing = () => {
                     bools.push(false);
                 });
                 setLineDetailsChecks(bools);
+                const chartData = ChartGen.smartGenerateChartData(controller.line_header.takt_time ?? 0, controller.line_details ?? []);
+                setChartData(chartData);
             }
         });
     }
@@ -144,7 +209,8 @@ const Linebalancing = () => {
         controller.editHeader();
         setTaktTime(controller.line_header.takt_time);
         setUnitPerHour(controller.line_header.unit_per_hour);
-
+        const chartData = ChartGen.smartGenerateChartData(controller.line_header.takt_time ?? 0, controller.line_details ?? []);
+        setChartData(chartData);
     }
 
     function onChangeUnitPerHour(event: any) {
@@ -155,6 +221,8 @@ const Linebalancing = () => {
         controller.editHeader();
         setTaktTime(controller.line_header.takt_time);
         setUnitPerHour(controller.line_header.unit_per_hour);
+        const chartData = ChartGen.smartGenerateChartData(controller.line_header.takt_time ?? 0, controller.line_details ?? []);
+        setChartData(chartData);
     }
 
     function onChangeCheckDetail(i: number) {
@@ -293,13 +361,11 @@ const Linebalancing = () => {
                         </div>
                     </div>
 
-
                     <div className="p-4 rounded-md">
                         {(isLoading) && <Loading></Loading>}
                         {(!isLoading) &&
                             <>
-                                <BarChart data={data} options={options} />
-
+                                <BarChart data={chartData} options={options} />
                                 <div className="flex justify-between mt-8">
                                     <div className="text-center font-bold text-black">
                                         <Button onClick={onClickAddDetail} className="flex items-center px-4 py-2 border border-blue-600 text-blue-600 font-semibold text-sm rounded-lg hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
@@ -335,7 +401,7 @@ const Linebalancing = () => {
                                                         {i + 1}
                                                     </td>
                                                     <td className="px-4 py-2 border text-center colSpan-9">
-                                                        {obj.step_code ?? '-'}
+                                                        <a href={`/timecapture?new=0&id=${obj._id}`} className='text-blue-500 hover:text-blue-700 underline font-semibold'>{obj.step_code ?? '-'}</a>
                                                     </td>
                                                     <td className="px-4 py-2 border text-center colSpan-9">
                                                         {obj.description ?? '-'}
