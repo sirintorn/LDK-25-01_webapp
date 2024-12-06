@@ -29,7 +29,7 @@ const Linebalancing = () => {
 
     const [taktTime, setTaktTime] = useState<number>();
     const [unitPerHour, setUnitPerHour] = useState<number>();
-
+    const [totalCycleTime, setTotalCycleTime] = useState<number>();
     const [cycleTimeMax, setCycleTimeMax] = useState<number>();
     const [percentOTPBottleneck, setPercentOTPBottleneck] = useState<number>();
     const [percentBalance, setPercentBalance] = useState<number>();
@@ -98,6 +98,7 @@ const Linebalancing = () => {
             const bnOut = FnLineBalancing.bottleneckOutput(ctmax.cycle_time_max);
             setBottleneckOutput(bnOut);
             setTotalWorkStation(totSt.total_count);
+            setTotalCycleTime(totCt);
         }
     }
 
@@ -140,10 +141,10 @@ const Linebalancing = () => {
         const val2 = FnLineBalancing.taktTimeToUnitPerHour(val1);
         controller.line_header.takt_time = val1;
         controller.line_header.unit_per_hour = val2;
-        controller.line_header.total_cycle_time = FnLineBalancing.totalCycleTime(lineDetails ?? []);
         controller.editHeader();
         setTaktTime(controller.line_header.takt_time);
         setUnitPerHour(controller.line_header.unit_per_hour);
+
     }
 
     function onChangeUnitPerHour(event: any) {
@@ -151,7 +152,6 @@ const Linebalancing = () => {
         const val2 = FnLineBalancing.unitPerHourToTaktTime(val1);
         controller.line_header.takt_time = val2;
         controller.line_header.unit_per_hour = val1;
-        controller.line_header.total_cycle_time = FnLineBalancing.totalCycleTime(lineDetails ?? []);
         controller.editHeader();
         setTaktTime(controller.line_header.takt_time);
         setUnitPerHour(controller.line_header.unit_per_hour);

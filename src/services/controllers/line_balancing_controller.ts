@@ -68,7 +68,6 @@ export class LineBalancingController{
             await LineBalancingAPI.editHeader(this.line_header._id, {
                 "takt_time": this.line_header.takt_time,
                 "unit_per_hour": this.line_header.unit_per_hour,
-                "total_cycle_time": this.line_header.total_cycle_time
             });
         } catch (error) {
             console.log(`ERR: ${error}`);
