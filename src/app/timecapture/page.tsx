@@ -38,7 +38,7 @@ const TimeCapture = () => {
         }
     }, [isRunning]);
 
-    
+
     useEffect(() => {
         AppConfig.forceInspectLogin();
         if (!user) {
@@ -71,7 +71,6 @@ const TimeCapture = () => {
         setIsRunning(false);
         setIsStarted(false);
         setErrorString('');
-
     }
 
 
@@ -81,7 +80,14 @@ const TimeCapture = () => {
         //window.location.assign('/dashboard');
 
         setIsLoading(true);
-        LineBalancingAPI.createDetail('6751ec7b146a85b8302601f9', '6751ec7b146a85b8302601fb', '67520461708a1747cd5e8695', elapsedTime, employee, description, station, stepCode).then((response) => {
+        let seconds = Math.floor(elapsedTime / (1000) % 60);
+        let milliseconds = Math.floor((elapsedTime % 1000));
+        let time = seconds + (milliseconds / 1000);
+
+        console.log(time);
+
+
+        LineBalancingAPI.createDetail(user.id, '6751ec7b146a85b8302601fb', '67520461708a1747cd5e8695', time, employee, description, station, stepCode).then((response) => {
             setIsLoading(false);
             setErrorString(response.message);
 
@@ -104,6 +110,7 @@ const TimeCapture = () => {
         let seconds = Math.floor(elapsedTime / (1000) % 60);
         let milliseconds = Math.floor((elapsedTime % 1000));
 
+
         const minutes_str = String(minutes).padStart(2, "0");
         const seconds_str = String(seconds).padStart(2, "0");
         const milliseconds_str = String(milliseconds).padStart(3, "0");
@@ -111,7 +118,7 @@ const TimeCapture = () => {
         return `${seconds_str}:${milliseconds_str}`;
     }
 
-    
+
     function bacgPage() {
 
         window.location.assign('/linebalancing');
@@ -122,92 +129,92 @@ const TimeCapture = () => {
     return (
         <>
             <NavBar user={user} path="/linebalancing" />
-
-            <div className="p-8">
-                <div className="grid grid-cols-6 gap-32 mb-8">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Step Code</label>
-                        <input
-                            type="text"
-                            onChange={(e) => setStepCode(e.target.value)}
-
-                            className="w-60 px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Description</label>
-                        <input
-                            type="text"
-                            onChange={(e) => setDescription(e.target.value)}
-                            className="w-96 px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                        />
-                    </div>
+            <div className="flex flex-col items-center">
+                <div className="font-bold text-black"><span className='text-[200px]'>{formatTime()}</span></div>
+                <div className="flex space-x-4 mt-4">
+                    <button onClick={isStarted ? stop : start}
+                        className="px-6 py-2 bg-green-500 text-white rounded-md shadow-md hover:bg-green-600 transition"
+                    >
+                        Start/Stop
+                    </button>
+                    <button onClick={reset}
+                        className="px-6 py-2 bg-red-500 text-white rounded-md shadow-md hover:bg-red-600 transition"
+                    >
+                        Reset
+                    </button>
                 </div>
-                <div className='grid grid-cols-6 mb-8 gap-52'>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Station</label>
-                        <input
-                            type="text"
-                            onChange={(e) => setStation(e.target.value)}
-                            className="w-60 px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Employee</label>
-                        <input
-                            type="text"
-                            onChange={(e) => setEmployee(e.target.value)}
-                            className="w-60 px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Cycle Time</label>
-                        <input
+            </div>
+            <div className="mt-20 pl-32 pr-24 grid grid-cols-3 gap-6 mt-4 place-items-start h-56">
+                <div>
+                    <label className="block text-sm font-medium text-gray-700">Step Code</label>
+                    <input
+                        type="text"
+                        onChange={(e) => setStepCode(e.target.value)}
+
+                        className="w-60 px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    />
+                </div>
+
+                <div>
+                    <label className="block text-sm font-medium text-gray-700">Station</label>
+                    <input
+                        type="text"
+                        onChange={(e) => setStation(e.target.value)}
+                        className="w-60 px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    />
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-gray-700">Employee</label>
+                    <input
+                        type="text"
+                        onChange={(e) => setEmployee(e.target.value)}
+                        className="w-60 px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    />
+                </div>
+
+                <div>
+                    <label className="block text-sm font-medium text-gray-700">Cycle Time</label>
+                    <input
                         readOnly={true}
 
-                            type="text"
-                            value={cycleTime}
-                            onChange={(e) => setCycleTime(e.target.value)}
-                            className="w-60 px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                        />
-                    </div>
-
-                    <div className="flex gap-4 col-span-3 space-x-4 mt-5 justify-end">
-                        {isLoading ? <button
-                            className="px-6 py-2 bg-gray-50 text-gray-600 rounded-md shadow-md "
-                            disabled={true}>
-                            Saveing...
-                        </button>
-                            : <button
-                                className="px-6 py-2 bg-green-500 text-white rounded-md shadow-md hover:bg-green-600 transition"
-                                onClick={handleCreateDetail}>
-                                Save
-                            </button>}
-                        <button className="px-6 py-2 bg-red-500 text-white rounded-md shadow-md hover:bg-red-600 transition"
-                        
-                        onClick={bacgPage}>
-                            Cancel
-                        </button>
-                    </div>
+                        type="text"
+                        value={cycleTime}
+                        onChange={(e) => setCycleTime(e.target.value)}
+                        className="w-60 px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    />
                 </div>
-                <div className="flex flex-col items-end">
-                    <label className="block text-sm font-medium text-gray-700">{errorString}</label>
-
+                <div>
+                    <label className="block text-sm font-medium text-gray-700">Description</label>
+                    <input
+                        type="text"
+                        onChange={(e) => setDescription(e.target.value)}
+                        className="w-96 px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    />
                 </div>
+            </div>
 
-                <div className="flex flex-col items-center">
-                    <div className="font-bold text-black"><span className='text-[200px]'>{formatTime()}</span></div>
-                    <div className="flex space-x-4 mt-4">
-                        <button onClick={isStarted ? stop : start}
+
+            <div className="p-8">
+
+                <div className="flex gap-4 col-span-3 space-x-4 mt-5 justify-end">
+                    {isLoading ? <button
+                        className="px-6 py-2 bg-gray-50 text-gray-600 rounded-md shadow-md "
+                        disabled={true}>
+                        Saveing...
+                    </button>
+                        : <button
                             className="px-6 py-2 bg-green-500 text-white rounded-md shadow-md hover:bg-green-600 transition"
-                        >
-                            Start/Stop
-                        </button>
-                        <button onClick={reset}
-                            className="px-6 py-2 bg-red-500 text-white rounded-md shadow-md hover:bg-red-600 transition"
-                        >
-                            Reset
-                        </button>
+                            onClick={handleCreateDetail}>
+                            Save
+                        </button>}
+                    <button className="px-6 py-2 bg-red-500 text-white rounded-md shadow-md hover:bg-red-600 transition"
+
+                        onClick={bacgPage}>
+                        Cancel
+                    </button>
+                    <div className="flex flex-col items-end">
+                        <label className="block text-sm font-medium text-gray-700">{errorString}</label>
+
                     </div>
                 </div>
 
