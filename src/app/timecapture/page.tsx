@@ -2,6 +2,10 @@
 import { UserIcon, ArrowRightStartOnRectangleIcon } from '@heroicons/react/24/outline'
 import React, { useState, useEffect, useRef } from 'react';
 import { LineBalancingAPI } from "@/services/apis/line_balancing";
+import NavBar from '@/components/layouts/NavBar';
+import { AppController } from '@/services/controllers/app_controller';
+import { AppConfig } from '@/services/configs/config';
+import { AppSession } from '@/services/configs/appSession';
 
 
 const TimeCapture = () => {
@@ -19,6 +23,9 @@ const TimeCapture = () => {
     const intervalIdRef: any = useRef(null);
     const startTimeRef = useRef(0);
     const [isStarted, setIsStarted] = useState(false);
+    const [user, setUser] = useState<any>();
+    const [workspaces, setWorkspaces] = useState<any[]>([]);
+    const [appController, setAppController] = useState<AppController>(new AppController());
 
     useEffect(() => {
         if (isRunning) {
@@ -30,6 +37,18 @@ const TimeCapture = () => {
             clearInterval(intervalIdRef.current);
         }
     }, [isRunning]);
+
+    
+    useEffect(() => {
+        AppConfig.forceInspectLogin();
+        if (!user) {
+            setUser(AppSession.getUser());
+            setWorkspaces(AppSession.getWorkspaces());
+        }
+        appController.user = user;
+        appController.workspaces = workspaces;
+
+    }, [user, appController, workspaces]);
 
     function start() {
         setIsRunning(true);
@@ -101,18 +120,8 @@ const TimeCapture = () => {
 
 
     return (
-        <div className="min-h-screen bg-white">
-            <header className="flex items-center px-8 py-8 bg-blue-500 text-white justify-between w-full">
-                <h1 className="text-4xl font-semibold mx-auto">Time Capture</h1>
-                <div className="flex w-20">
-                    <button className="w-20">
-                        <UserIcon />
-                    </button>
-                    <button className="w-20">
-                        <ArrowRightStartOnRectangleIcon />
-                    </button>
-                </div>
-            </header>
+        <>
+            <NavBar user={user} path="/linebalancing" />
 
             <div className="p-8">
                 <div className="grid grid-cols-6 gap-32 mb-8">
@@ -154,6 +163,8 @@ const TimeCapture = () => {
                     <div>
                         <label className="block text-sm font-medium text-gray-700">Cycle Time</label>
                         <input
+                        readOnly={true}
+
                             type="text"
                             value={cycleTime}
                             onChange={(e) => setCycleTime(e.target.value)}
@@ -201,7 +212,7 @@ const TimeCapture = () => {
                 </div>
 
             </div>
-        </div>
+        </>
     );
 };
 
