@@ -6,7 +6,8 @@ export class AppSession {
 
     static sessions = {
         user: 'user',
-        workspaces: 'workspaces'
+        workspaces: 'workspaces',
+        last_config: 'last_config'
     };
 
     constructor() {
@@ -81,6 +82,39 @@ export class AppSession {
     static deleteWorkspaces() {
         try {
             sessionStorage.removeItem(this.sessions.workspaces);
+            return;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    static getLastConfig() {
+        try {
+            const data = sessionStorage.getItem(this.sessions.last_config);
+            if(data){
+                const snapshot = JSON.parse(data);
+                return snapshot;
+            }else{
+                return null;
+            }
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    static storeLastConfig(config: any) {
+        try {
+            const data = JSON.stringify(config);
+            sessionStorage.setItem(this.sessions.last_config, data);
+            return;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    static deleteLastConfig() {
+        try {
+            sessionStorage.removeItem(this.sessions.last_config);
             return;
         } catch (error) {
             throw error;

@@ -9,8 +9,11 @@ import { useEffect, useState } from 'react';
 import { AppController } from '@/services/controllers/app_controller';
 import { AppConfig } from '@/services/configs/config';
 import { AppSession } from '@/services/configs/appSession';
+import { useRouter } from 'next/navigation';
 
 const Dashboard = () => {
+  const router = useRouter();
+  
   const [user, setUser] = useState<any>();
   const [workspaces, setWorkspaces] = useState<any[]>([]);
   const [appController, setAppController] = useState<AppController>(new AppController());
@@ -30,7 +33,7 @@ const Dashboard = () => {
   }
 
   function onClickLineBalancing(event: any) {
-    window.location.assign('/linebalancing')
+    router.push(`/linebalancing?uid=${user._id}&wid=${workspaces[appController.targetWorkspace]._id}`);
   }
 
   return (
