@@ -1,19 +1,43 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import BarChart from '@/components/charts/BarChart';
 import NavBar from '@/components/layouts/NavBar';
+import Loading from '@/components/misc/Loading';
+import { FnLineBalancing } from '@/services/agents/fn_line_balancing';
 import { AppSession } from '@/services/configs/appSession';
 import { AppConfig } from '@/services/configs/config';
 import { AppController } from '@/services/controllers/app_controller';
+import { LineBalancingController } from '@/services/controllers/line_balancing_controller';
 import { Button, Input, Select } from '@headlessui/react';
-import { UserIcon, UserPlusIcon, ArrowRightStartOnRectangleIcon, TrashIcon, ClockIcon, ChatBubbleBottomCenterTextIcon, PresentationChartLineIcon } from '@heroicons/react/24/outline'
+import { AdjustmentsVerticalIcon, UserIcon, UserGroupIcon, UserPlusIcon, ArrowRightStartOnRectangleIcon, TrashIcon, ClockIcon, ChatBubbleBottomCenterTextIcon, PresentationChartLineIcon, HandRaisedIcon } from '@heroicons/react/24/outline'
 import { useEffect, useState } from 'react';
 
 const Linebalancing = () => {
     const [user, setUser] = useState<any>();
     const [workspaces, setWorkspaces] = useState<any[]>([]);
     const [appController, setAppController] = useState<AppController>(new AppController());
+    const [controller, setController] = useState<LineBalancingController>(new LineBalancingController());
+
+    const [lines, setLines] = useState<any[]>([]);
+    const [models, setModels] = useState<any[]>([]);
+
+    const [lineHeader, setLineHeader] = useState<any>();
+    const [lineDetails, setLineDetails] = useState<any[]>();
+    const [lineDetailsChecks, setLineDetailsChecks] = useState<boolean[]>();
+
+    const [taktTime, setTaktTime] = useState<number>();
+    const [unitPerHour, setUnitPerHour] = useState<number>();
+    const [totalCycleTime, setTotalCycleTime] = useState<number>();
+    const [cycleTimeMax, setCycleTimeMax] = useState<number>();
+    const [percentOTPBottleneck, setPercentOTPBottleneck] = useState<number>();
+    const [percentBalance, setPercentBalance] = useState<number>();
+    const [bottleneckStation, setBottleneckStation] = useState<string>();
+    const [bottleneckOutput, setBottleneckOutput] = useState<number>();
+    const [totalWorkStation, setTotalWorkStation] = useState<number>();
+
+    const [isLoading, setIsLoading] = useState<boolean>(false);
 
     // Define the configuration for the chart
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -39,20 +63,124 @@ const Linebalancing = () => {
         },
     };
 
-
     useEffect(() => {
         AppConfig.forceInspectLogin();
         if (!user) {
-            setUser(AppSession.getUser());
-            setWorkspaces(AppSession.getWorkspaces());
+            appController.init(AppSession.getUser(), AppSession.getWorkspaces());
+            controller.init(appController.user._id, appController.workspaces[appController.targetWorkspace]._id);
+            setUser(appController.user);
+            setWorkspaces(appController.workspaces);
         }
-        appController.user = user;
-        appController.workspaces = workspaces;
 
-    }, [user, appController, workspaces]);
+        if (!uiUpdater) {
+            setUIUpdater(setInterval(updateUI, 1000));
+        }
+    }, [user, appController, workspaces, controller]);
+
+    const [uiUpdater, setUIUpdater] = useState<any>(null);
+    function updateUI() {
+        if (controller?.isLoading) setIsLoading(controller.isLoading);
+        if (controller?.lines) setLines(controller.lines);
+        if (controller?.models) setModels(controller.models);
+        if (controller?.line_header) setLineHeader(controller.line_header);
+        if (controller?.line_details) {
+            setLineDetails(controller.line_details);
+            const ctmax = FnLineBalancing.findCycleTimeMax(controller.line_details);
+            setCycleTimeMax(ctmax.cycle_time_max);
+            const perOtpBn = FnLineBalancing.percentOTPBottleneck(controller.line_header.takt_time, ctmax.cycle_time_max);
+            setPercentOTPBottleneck(perOtpBn);
+            const totCt = FnLineBalancing.totalCycleTime(controller.line_details);
+            const totSt = FnLineBalancing.totalWorkstation(controller.line_details);
+            const perBln = FnLineBalancing.percentBalance(totCt, ctmax.cycle_time_max, totSt.total_count);
+            setPercentBalance(perBln);
+            const bnSt = FnLineBalancing.findBottleneckStation(controller.line_details);
+            setBottleneckStation(bnSt ?? '-');
+            const bnOut = FnLineBalancing.bottleneckOutput(ctmax.cycle_time_max);
+            setBottleneckOutput(bnOut);
+            setTotalWorkStation(totSt.total_count);
+            setTotalCycleTime(totCt);
+        }
+    }
 
     function onClickAddDetail(event: any) {
         window.location.assign('/timecapture');
+    }
+
+    function onChangeLine(event: any) {
+        controller.target_line = Number(event.target.value ?? -1);
+        controller.syncHeader().then(() => {
+            setTaktTime(controller.line_header ? controller.line_header.takt_time : 0);
+            setUnitPerHour(controller.line_header ? controller.line_header.unit_per_hour : 0);
+            if (controller.line_details) {
+                let bools: boolean[] = [];
+                controller.line_details.forEach(() => {
+                    bools.push(false);
+                });
+                setLineDetailsChecks(bools);
+            }
+        });
+    }
+
+    function onChangeModel(event: any) {
+        controller.target_model = Number(event.target.value ?? -1);
+        controller.syncHeader().then(() => {
+            setTaktTime(controller.line_header.takt_time);
+            setUnitPerHour(controller.line_header.unit_per_hour);
+            if (controller.line_details) {
+                let bools: boolean[] = [];
+                controller.line_details.forEach(() => {
+                    bools.push(false);
+                });
+                setLineDetailsChecks(bools);
+            }
+        });
+    }
+
+    function onChangeTaktTime(event: any) {
+        const val1 = Number(event.target.value ?? -1);
+        const val2 = FnLineBalancing.taktTimeToUnitPerHour(val1);
+        controller.line_header.takt_time = val1;
+        controller.line_header.unit_per_hour = val2;
+        controller.editHeader();
+        setTaktTime(controller.line_header.takt_time);
+        setUnitPerHour(controller.line_header.unit_per_hour);
+
+    }
+
+    function onChangeUnitPerHour(event: any) {
+        const val1 = Number(event.target.value ?? -1);
+        const val2 = FnLineBalancing.unitPerHourToTaktTime(val1);
+        controller.line_header.takt_time = val2;
+        controller.line_header.unit_per_hour = val1;
+        controller.editHeader();
+        setTaktTime(controller.line_header.takt_time);
+        setUnitPerHour(controller.line_header.unit_per_hour);
+    }
+
+    function onChangeCheckDetail(i: number) {
+        console.log('checked at: ' + i);
+        if (lineDetailsChecks) lineDetailsChecks[i] = !lineDetailsChecks[i];
+        setLineDetailsChecks(lineDetailsChecks);
+    }
+
+    function onClickDelete() {
+        let ids = [];
+        if (confirm('Are you sure?')) {
+            try {
+                for (let i = lineDetailsChecks!.length - 1; i > -1; i--) {
+                    const bool = lineDetailsChecks![i];
+                    if (bool) {
+                        ids.push(lineDetails![i]._id);
+                        lineDetails?.splice(i, 1);
+                        lineDetailsChecks?.splice(i, 1);
+                    }
+                }
+                console.log(ids);
+                controller.deleteDetails(ids);
+            } catch (error) {
+                console.log(error);
+            }
+        }
     }
 
     return (
@@ -63,47 +191,69 @@ const Linebalancing = () => {
                     <div className="grid grid-cols-5 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700">Line</label>
-                            <Select className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                            <Select onChange={onChangeLine} className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
                                 <option value="">Select</option>
+                                {lines?.map((obj, i) => {
+                                    return (
+                                        <option value={i} key={i}>
+                                            {obj.name}: {obj.code}
+                                        </option>
+                                    );
+                                })}
                             </Select>
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700">Model/Style</label>
-                            <Select className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                            <Select onChange={onChangeModel} className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
                                 <option value="">Select</option>
+                                {models?.map((obj, i) => {
+                                    return (
+                                        <option value={i} key={i}>
+                                            {obj.name}: {obj.code}
+                                        </option>
+                                    );
+                                })}
                             </Select>
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700">Takt Time</label>
                             <Input
-                                type="text"
+                                type="number"
                                 className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                value={taktTime ? taktTime.toFixed(3) : ''}
+                                onChange={onChangeTaktTime}
+                                disabled={!lineHeader}
                             />
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700">Unit/Hour</label>
                             <Input
-                                type="text"
+                                type="number"
                                 className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                value={unitPerHour ? unitPerHour.toFixed(0) : ''}
+                                onChange={onChangeUnitPerHour}
+                                disabled={!lineHeader}
                             />
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700">Total Cycle Time</label>
                             <Input
-                                type="text"
+                                type="number"
                                 className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                value={lineHeader ? lineHeader.total_cycle_time.toFixed(3) : ''}
+                                disabled={true}
                             />
                         </div>
                     </div>
 
 
-                    <div className="grid grid-cols-6 gap-4 text-center rounded-lg p-4 ">
+                    <div className="grid grid-cols-6 gap-4 text-center rounded-lg px-4 ">
                         <div className="flex flex-col items-center bg-white text-black border border-gray-300 p-6 rounded-md shadow-sm">
                             <div className="w-10 mb-2">
                                 <ClockIcon />
                             </div>
                             <h3 className="text-lg font-medium mb-1 text-center">Cycle Time max</h3>
-                            <p className="text-3xl font-bold text-center">000</p>
+                            <p className="text-3xl font-bold text-center">{cycleTimeMax ? cycleTimeMax.toFixed(3) : '000'}</p>
                         </div>
 
                         <div className="flex flex-col items-center bg-white text-black border border-gray-300 p-6 rounded-md shadow-sm">
@@ -111,102 +261,114 @@ const Linebalancing = () => {
                                 <ChatBubbleBottomCenterTextIcon />
                             </div>
                             <h3 className="text-lg">%OTP Bottleneck</h3>
-                            <p className="text-3xl font-bold">000</p>
+                            <p className="text-3xl font-bold">{percentOTPBottleneck ? percentOTPBottleneck.toFixed(2) : '000'}</p>
                         </div>
                         <div className="flex flex-col items-center bg-white text-black border border-gray-300 p-6 rounded-md shadow-sm">
                             <div className="w-10 mb-2">
                                 <PresentationChartLineIcon />
                             </div>
                             <h3 className="text-lg">%Balance</h3>
-                            <p className="text-3xl font-bold">000</p>
+                            <p className="text-3xl font-bold">{percentBalance ? percentBalance.toFixed(2) : '000'}</p>
                         </div>
                         <div className="flex flex-col items-center bg-white text-black border border-gray-300 p-6 rounded-md shadow-sm">
                             <div className="w-10 mb-2">
-                                <PresentationChartLineIcon />
+                                <HandRaisedIcon />
                             </div>
                             <h3 className="text-lg">Bottleneck Station</h3>
-                            <p className="text-3xl font-bold">000</p>
+                            <p className="text-3xl font-bold">{bottleneckStation ?? '000'}</p>
                         </div>
                         <div className="flex flex-col items-center bg-white text-black border border-gray-300 p-6 rounded-md shadow-sm">
                             <div className="w-10 mb-2">
-                                <PresentationChartLineIcon />
+                                <AdjustmentsVerticalIcon />
                             </div>
                             <h3 className="text-lg">Bottleneck Output</h3>
-                            <p className="text-3xl font-bold">000</p>
+                            <p className="text-3xl font-bold">{bottleneckOutput ? bottleneckOutput.toFixed(3) : '000'}</p>
                         </div>
                         <div className="flex flex-col items-center bg-white text-black border border-gray-300 p-6 rounded-md shadow-sm">
                             <div className="w-10 mb-2">
-                                <PresentationChartLineIcon />
+                                <UserGroupIcon />
                             </div>
                             <h3 className="text-lg">Total Workstation</h3>
-                            <p className="text-3xl font-bold">000</p>
+                            <p className="text-3xl font-bold">{totalWorkStation ?? '000'}</p>
                         </div>
                     </div>
 
 
                     <div className="p-4 rounded-md">
-                        <BarChart data={data} options={options} />
+                        {(isLoading) && <Loading></Loading>}
+                        {(!isLoading) &&
+                            <>
+                                <BarChart data={data} options={options} />
+
+                                <div className="flex justify-between mt-8">
+                                    <div className="text-center font-bold text-black">
+                                        <Button onClick={onClickAddDetail} className="flex items-center px-4 py-2 border border-blue-600 text-blue-600 font-semibold text-sm rounded-lg hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                                            <UserPlusIcon className='h-7 w-7 text-blue' />
+                                        </Button>
+                                    </div>
+                                    <div className="text-center font-bold text-black">
+                                        <Button onClick={onClickDelete} className="flex items-center px-4 py-2 border border-red-600 text-red-600 font-semibold text-sm rounded-lg hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
+                                            <TrashIcon className='h-7 w-7 text-red' />
+                                        </Button>
+                                    </div>
+                                </div>
+
+                                <table className="w-full border border-gray-300 text-black mt-4">
+                                    <thead>
+                                        <tr className="bg-gray-200">
+                                            <th className="px-4 py-2 border">No</th>
+                                            <th className="px-4 py-2 border">Step Code</th>
+                                            <th className="px-4 py-2 border">Description</th>
+                                            <th className="px-4 py-2 border">Station</th>
+                                            <th className="px-4 py-2 border">Employee</th>
+                                            <th className="px-4 py-2 border">Cycle Time</th>
+                                            <th className="px-4 py-2 border">Record By</th>
+                                            <th className="px-4 py-2 border">Status</th>
+                                            <th className="px-4 py-2 border">Delete</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {lineDetails?.map((obj, i) => {
+                                            return (
+                                                <tr key={i}>
+                                                    <td className="px-4 py-2 border text-center colSpan-9">
+                                                        {i + 1}
+                                                    </td>
+                                                    <td className="px-4 py-2 border text-center colSpan-9">
+                                                        {obj.step_code ?? '-'}
+                                                    </td>
+                                                    <td className="px-4 py-2 border text-center colSpan-9">
+                                                        {obj.description ?? '-'}
+                                                    </td>
+                                                    <td className="px-4 py-2 border text-center colSpan-9">
+                                                        {obj.station ?? '-'}
+                                                    </td>
+                                                    <td className="px-4 py-2 border text-center colSpan-9">
+                                                        {obj.employee ?? '-'}
+                                                    </td>
+                                                    <td className="px-4 py-2 border text-center colSpan-9">
+                                                        {obj.cycle_time ?? '-'}
+                                                    </td>
+                                                    <td className="px-4 py-2 border text-center colSpan-9">
+                                                        {appController.user.display_name ?? '-'}
+                                                    </td>
+                                                    <td style={{ background: FnLineBalancing.detailStatus(taktTime ?? 0, obj, lineDetails).bg }} className="px-4 py-2 border text-center colSpan-9">
+                                                        {FnLineBalancing.detailStatus(taktTime ?? 0, obj, lineDetails).bg}
+                                                    </td>
+                                                    <td className="px-4 py-2 border text-center colSpan-9">
+                                                        <Input
+                                                            type='checkbox'
+                                                            onChange={() => onChangeCheckDetail(i)}
+                                                        ></Input>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </>
+                        }
                     </div>
-
-                    <div className="flex justify-between">
-                        <div className="text-center font-bold text-black">
-                            <Button onClick={onClickAddDetail} className="flex items-center px-4 py-2 border border-blue-600 text-blue-600 font-semibold text-sm rounded-lg hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                                <UserPlusIcon className='h-7 w-7 text-blue' />
-                            </Button>
-                        </div>
-                        <div className="text-center font-bold text-black">
-                            <Button className="flex items-center px-4 py-2 border border-red-600 text-red-600 font-semibold text-sm rounded-lg hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
-                                <TrashIcon className='h-7 w-7 text-red' />
-                            </Button>
-                        </div>
-                    </div>
-
-                    <table className="w-full border border-gray-300 text-black">
-                        <thead>
-                            <tr className="bg-gray-200">
-                                <th className="px-4 py-2 border">No</th>
-                                <th className="px-4 py-2 border">Step Code</th>
-                                <th className="px-4 py-2 border">Description</th>
-                                <th className="px-4 py-2 border">Station</th>
-                                <th className="px-4 py-2 border">Employee</th>
-                                <th className="px-4 py-2 border">Cycle Time</th>
-                                <th className="px-4 py-2 border">Record By</th>
-                                <th className="px-4 py-2 border">Status</th>
-                                <th className="px-4 py-2 border">Delete</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td className="px-4 py-2 border text-center colSpan-9">
-
-                                </td>
-                                <td className="px-4 py-2 border text-center colSpan-9">
-
-                                </td>
-                                <td className="px-4 py-2 border text-center colSpan-9">
-
-                                </td>
-                                <td className="px-4 py-2 border text-center colSpan-9">
-
-                                </td>
-                                <td className="px-4 py-2 border text-center colSpan-9">
-
-                                </td>
-                                <td className="px-4 py-2 border text-center colSpan-9">
-
-                                </td>
-                                <td className="px-4 py-2 border text-center colSpan-9">
-
-                                </td>
-                                <td className="px-4 py-2 border text-center colSpan-9">
-
-                                </td>
-                                <td className="px-4 py-2 border text-center colSpan-9">
-
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
                 </div>
             </div>
         </>

@@ -40,7 +40,7 @@ const BarChart: React.FC<BarChartProps> = ({ data, options }) => {
         };
     }, [data, options]);
 
-    return <canvas ref={chartRef} />;
+    return <canvas ref={chartRef} style={{height: '6vh'}} />;
 };
 
 export default BarChart;

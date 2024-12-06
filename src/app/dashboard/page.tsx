@@ -18,11 +18,10 @@ const Dashboard = () => {
   useEffect(() => {
     AppConfig.forceInspectLogin();
     if (!user) {
-      setUser(AppSession.getUser());
-      setWorkspaces(AppSession.getWorkspaces());
+      appController.init(AppSession.getUser(), AppSession.getWorkspaces())
+      setUser(appController.user);
+      setWorkspaces(appController.workspaces);
     }
-    appController.user = user;
-    appController.workspaces = workspaces;
 
   }, [user, appController, workspaces]);
 
