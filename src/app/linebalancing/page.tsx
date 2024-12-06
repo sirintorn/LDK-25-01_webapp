@@ -132,14 +132,14 @@ const Linebalancing = () => {
             setWorkspaces(appController.workspaces);
         }
 
-        const last_config = AppSession.getLastConfig();
+        /*const last_config = AppSession.getLastConfig();
         if(last_config && !isNaN(last_config.target_line)){
             controller.target_line = last_config.target_line;
             if(last_config && !isNaN(last_config.target_model)){
                 controller.target_model = last_config.target_model;
                 syncHeader();
             }
-        }
+        }*/
 
         if (!uiUpdater) {
             setUIUpdater(setInterval(updateUI, 1000));
@@ -172,7 +172,7 @@ const Linebalancing = () => {
     }
 
     function onClickAddDetail(event: any) {
-        router.push(`/timecapture?new=1&uid=${appController.user._id}&wid=${appController.workspaces[appController.targetWorkspace]._id}`);
+        router.push(`/timecapture?new=1&uid=${uid}&wid=${wid}&hid=${lineHeader._id}`);
     }
 
     function syncHeader(){
@@ -405,7 +405,7 @@ const Linebalancing = () => {
                                                         {i + 1}
                                                     </td>
                                                     <td className="px-4 py-2 border text-center colSpan-9">
-                                                        <a href={`/timecapture?new=0&id=${obj._id}`} className='text-blue-500 hover:text-blue-700 underline font-semibold'>{obj.step_code ?? '-'}</a>
+                                                        <a href={`/timecapture?new=0&id=${obj._id}&uid=${uid}&wid=${wid}&hid=${lineHeader._id}`} className='text-blue-500 hover:text-blue-700 underline font-semibold'>{obj.step_code ?? '-'}</a>
                                                     </td>
                                                     <td className="px-4 py-2 border text-center colSpan-9">
                                                         {obj.description ?? '-'}

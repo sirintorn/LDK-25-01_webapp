@@ -83,6 +83,26 @@ export class LineBalancingAPI {
         });
     }
 
+    static getDetail(id: string): Promise<any> {
+        return new Promise((resolve, reject) => {
+            const config = {
+                method: 'get',
+                maxBodyLength: Infinity,
+                url: `${AppConfig.getAPIPath()}${this.path}/detail/${id}`,
+                headers: {}
+            };
+
+            axios.request(config)
+                .then((response) => {
+                    resolve(response.data);
+                })
+                .catch((error) => {
+                    reject(error);
+                });
+
+        });
+    }
+
     static createDetail(user_id: string, workspace_id: string, line_header_id: string, cycle_time: number, description: string, employee: string, station: string, step_code: string): Promise<any> {
         return new Promise((resolve, reject) => {
             const data = JSON.stringify({

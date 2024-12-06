@@ -8,7 +8,7 @@ import Image from "next/image";
 
 let navigation = [
   { name: 'Dashboard', href: '/dashboard', current: true },
-  { name: 'Hydy Line Balancing', href: '/linebalancing', current: false },
+  //{ name: 'Hydy Line Balancing', href: '/linebalancing', current: false },
   //{ name: 'Team', href: '#', current: false },
   //{ name: 'Projects', href: '#', current: false },
   //{ name: 'Calendar', href: '#', current: false },

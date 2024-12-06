@@ -6,9 +6,14 @@ import NavBar from '@/components/layouts/NavBar';
 import { AppController } from '@/services/controllers/app_controller';
 import { AppConfig } from '@/services/configs/config';
 import { AppSession } from '@/services/configs/appSession';
+import { Input } from '@headlessui/react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { ILineDetail } from '@/models/m_line_detail';
 
 
 const TimeCapture = () => {
+    const searchParams = useSearchParams();
+    const router = useRouter();
 
     const [isRunning, setIsRunning] = useState(false);
     const [elapsedTime, setElapsedTime] = useState(0);
@@ -16,7 +21,7 @@ const TimeCapture = () => {
     const [station, setStation] = useState<string>('');
     const [employee, setEmployee] = useState<string>('');
     const [stepCode, setStepCode] = useState<string>('');
-    const [cycleTime, setCycleTime] = useState<string>('00:000');
+    const [cycleTime, setCycleTime] = useState<string>('00.000');
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [errorString, setErrorString] = useState<string>('');
 
@@ -26,6 +31,20 @@ const TimeCapture = () => {
     const [user, setUser] = useState<any>();
     const [workspaces, setWorkspaces] = useState<any[]>([]);
     const [appController, setAppController] = useState<AppController>(new AppController());
+
+    const [lineDetail, setLineDetail] = useState<ILineDetail>();
+
+    const xnw = searchParams.get('new') || '1';
+    const id = searchParams.get('id') || null;
+    const uid = searchParams.get('uid') || null;
+    const wid = searchParams.get('wid') || null;
+    const hid = searchParams.get('hid') || null;
+
+    useEffect(() => {
+        if(!lineDetail && xnw == '0' && id){
+            loadDetail();
+        }
+    }, [lineDetail]);
 
     useEffect(() => {
         if (isRunning) {
@@ -67,7 +86,7 @@ const TimeCapture = () => {
 
     function reset() {
         setElapsedTime(0);
-        setCycleTime('00:000');
+        setCycleTime('00.000');
         setIsRunning(false);
         setIsStarted(false);
         setErrorString('');
@@ -86,21 +105,47 @@ const TimeCapture = () => {
 
         console.log(time);
 
+        if(xnw == '1' && uid && wid && hid){
+            LineBalancingAPI.createDetail(
+                uid, 
+                wid, 
+                hid, 
+                time, 
+                employee, 
+                description, 
+                station, 
+                stepCode
+            ).then((response) => {
+                setIsLoading(false);
+                setErrorString(response.message);
+    
+                // AppSession.storeUser(res.user);
+                // AppSession.storeWorkspaces(res.workspaces);
+                // window.location.assign('/dashboard');
+            }).catch(error => {
+                console.log('ERR: ' + error);
+                setErrorString('ERR: ' + error);
+    
+                setIsLoading(false);
+            });
+        }else if(xnw == '0' && id && uid && wid && hid){
+            LineBalancingAPI.editDetail(id, {
+                "cycle_time": time,
+                "description": description, 
+                "employee": employee, 
+                "station": station,
+                "step_code": stepCode
+            }).then((response) => {
+                setIsLoading(false);
+                setErrorString(response.message);
 
-        LineBalancingAPI.createDetail(user.id, '6751ec7b146a85b8302601fb', '67520461708a1747cd5e8695', time, employee, description, station, stepCode).then((response) => {
-            setIsLoading(false);
-            setErrorString(response.message);
-
-            // AppSession.storeUser(res.user);
-            // AppSession.storeWorkspaces(res.workspaces);
-            // window.location.assign('/dashboard');
-        }).catch(error => {
-            console.log('ERR: ' + error);
-            setErrorString('ERR: ' + error);
-
-            setIsLoading(false);
-            // setError('Username หรือ Password ไม่ถูกต้อง');
-        });
+            }).catch(error => {
+                console.log('ERR: ' + error);
+                setErrorString('ERR: ' + error);
+    
+                setIsLoading(false);
+            });
+        }
     }
 
 
@@ -115,16 +160,31 @@ const TimeCapture = () => {
         const seconds_str = String(seconds).padStart(2, "0");
         const milliseconds_str = String(milliseconds).padStart(3, "0");
 
-        return `${seconds_str}:${milliseconds_str}`;
+        return `${seconds_str}.${milliseconds_str}`;
     }
 
 
     function bacgPage() {
-
-        window.location.assign('/linebalancing');
-
+        router.push(`/linebalancing?uid=${uid}&wid=${wid}`)
     }
 
+    async function loadDetail(){
+        setIsLoading(true);
+        try {
+            const res = await LineBalancingAPI.getDetail(id!);
+            const detail: ILineDetail = res.line_detail;
+            setLineDetail(res.line_detail);
+            setElapsedTime(detail.cycle_time);
+            setDescription(detail.description ?? '');
+            setStation(detail.station);
+            setEmployee(detail.employee ?? '');
+            setStepCode(detail.step_code);
+            setCycleTime(detail.cycle_time.toFixed(3));
+        } catch (error) {
+            console.log(error);
+        }
+        setIsLoading(false);
+    }
 
     return (
         <>
@@ -147,34 +207,36 @@ const TimeCapture = () => {
             <div className="mt-20 pl-32 pr-24 grid grid-cols-3 gap-6 mt-4 place-items-start h-56">
                 <div>
                     <label className="block text-sm font-medium text-gray-700">Step Code</label>
-                    <input
+                    <Input
                         type="text"
                         onChange={(e) => setStepCode(e.target.value)}
-
+                        value={stepCode}
                         className="w-60 px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                     />
                 </div>
 
                 <div>
                     <label className="block text-sm font-medium text-gray-700">Station</label>
-                    <input
+                    <Input
                         type="text"
                         onChange={(e) => setStation(e.target.value)}
+                        value={station}
                         className="w-60 px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                     />
                 </div>
                 <div>
                     <label className="block text-sm font-medium text-gray-700">Employee</label>
-                    <input
+                    <Input
                         type="text"
                         onChange={(e) => setEmployee(e.target.value)}
+                        value={employee}
                         className="w-60 px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                     />
                 </div>
 
                 <div>
                     <label className="block text-sm font-medium text-gray-700">Cycle Time</label>
-                    <input
+                    <Input
                         readOnly={true}
 
                         type="text"
@@ -185,9 +247,10 @@ const TimeCapture = () => {
                 </div>
                 <div>
                     <label className="block text-sm font-medium text-gray-700">Description</label>
-                    <input
+                    <Input
                         type="text"
                         onChange={(e) => setDescription(e.target.value)}
+                        value={description}
                         className="w-96 px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                     />
                 </div>
@@ -200,7 +263,7 @@ const TimeCapture = () => {
                     {isLoading ? <button
                         className="px-6 py-2 bg-gray-50 text-gray-600 rounded-md shadow-md "
                         disabled={true}>
-                        Saveing...
+                        Saving...
                     </button>
                         : <button
                             className="px-6 py-2 bg-green-500 text-white rounded-md shadow-md hover:bg-green-600 transition"
