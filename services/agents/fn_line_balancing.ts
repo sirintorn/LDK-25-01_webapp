@@ -67,7 +67,8 @@ export class FnLineBalancing{
 
     //4.
     static percentOTPBottleneck(takt_time: number, cycle_time_max: number){
-        return ( (!isNaN(takt_time) ? takt_time : 0) / (!isNaN(cycle_time_max) ? cycle_time_max : -1) )  * 100;
+        const result = ( (!isNaN(takt_time) ? takt_time : 0) / (!isNaN(cycle_time_max) ? cycle_time_max : -1) )  * 100;
+        return isFinite(result) ? result : 0;
     }
 
     //5.
@@ -87,7 +88,8 @@ export class FnLineBalancing{
 
     //7.
     static bottleneckOutput(cycle_time_max: number){
-        return 60 / (!isNaN(cycle_time_max)  ? cycle_time_max : -1);
+        const result = 60 / (!isNaN(cycle_time_max) ? cycle_time_max : -1);
+        return isFinite(result) ? result : 0;
     }
 
     //8.
