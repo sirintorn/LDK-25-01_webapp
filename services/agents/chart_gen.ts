@@ -20,7 +20,7 @@ export class ChartGen {
 
                 for (let key2 in items) {
                     let element: ILineDetail = items[key2];
-                    let _title = element.station;
+                    let _title = element.description;
                     /*if (element.split_no) {
                         _title = `[split ${element.split_no}] ` + _title;
                     }*/
@@ -72,7 +72,7 @@ export class ChartGen {
                         workStations.push(key);
                     }
 
-                    const _title = item.station;
+                    const _title = item.description;
                     /*if (item.split_no) {
                         _title = `[split ${item.split_no}] ` + _title;
                     }*/

@@ -128,8 +128,8 @@ const TimeCapture = () => {
                 wid,
                 hid,
                 time,
-                employee,
                 description,
+                employee,
                 station,
                 stepCode
             ).then((response) => {
