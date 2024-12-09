@@ -101,7 +101,7 @@ const TimeCapture = () => {
 
 
     function formatTime() {
-        const seconds = Math.floor(elapsedTime / (1000) % 60);
+        const seconds = Math.floor(elapsedTime / (1000));
         const milliseconds = Math.floor((elapsedTime % 1000));
 
         const seconds_str = String(seconds).padStart(2, "0");
@@ -116,7 +116,7 @@ const TimeCapture = () => {
         //window.location.assign('/dashboard');
 
         setIsLoading(true);
-        const seconds = Math.floor(elapsedTime / (1000) % 60);
+        const seconds = Math.floor(elapsedTime / (1000));
         const milliseconds = Math.floor((elapsedTime % 1000));
         const time = seconds + (milliseconds / 1000);
 
@@ -187,7 +187,7 @@ const TimeCapture = () => {
             const res = await LineBalancingAPI.getDetail(id!);
             const detail: ILineDetail = res.line_detail;
             setLineDetail(res.line_detail);
-            setElapsedTime(detail.cycle_time);
+            setElapsedTime(detail.cycle_time * 1000);
             setDescription(detail.description ?? '');
             setStation(detail.station);
             setEmployee(detail.employee ?? '');
