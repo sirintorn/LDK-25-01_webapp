@@ -27,6 +27,8 @@ const Linebalancing = () => {
 
     const [lines, setLines] = useState<any[]>([]);
     const [models, setModels] = useState<any[]>([]);
+    const [target_line, setTargetLine] = useState<string>();
+    const [target_model, setTargetModel] = useState<string>();
 
     const [lineHeader, setLineHeader] = useState<any>();
     const [lineDetails, setLineDetails] = useState<any[]>();
@@ -117,6 +119,7 @@ const Linebalancing = () => {
 
     const uid = searchParams.get('uid') || null;
     const wid = searchParams.get('wid') || null;
+    const hid = searchParams.get('hid') || null;
 
     useEffect(() => {
         AppConfig.forceInspectLogin();
@@ -128,6 +131,11 @@ const Linebalancing = () => {
 
             setUser(appController.user);
             setWorkspaces(appController.workspaces);
+
+            if (hid){
+                console.log(`hid: ${hid}`)
+                loadHeader();
+            }
         }
 
         /*const last_config = AppSession.getLastConfig();
@@ -193,13 +201,41 @@ const Linebalancing = () => {
         });
     }
 
+    function loadHeader() {
+        if (hid) {
+            controller.loadHeader(hid).then(() => {
+                AppSession.storeLastConfig({
+                    target_line: controller.target_line,
+                    target_model: controller.target_model
+                });
+                setTargetLine(controller.target_line);
+                setTargetModel(controller.target_model);
+                setTaktTime(controller.line_header ? controller.line_header.takt_time : 0);
+                setUnitPerHour(controller.line_header ? controller.line_header.unit_per_hour : 0);
+
+                if (controller.line_details) {
+                    const bools: boolean[] = [];
+                    controller.line_details.forEach(() => {
+                        bools.push(false);
+                    });
+                    setLineDetailsChecks(bools);
+                    const chartData = ChartGen.smartGenerateChartData(controller.line_header.takt_time ?? 0, controller.line_details ?? []);
+                    setChartData(chartData);
+                }
+
+            });
+        }
+    }
+
     function onChangeLine(event: any) {
-        controller.target_line = Number(event.target.value ?? -1);
+        setTargetLine(event.target.value);
+        controller.target_line = event.target.value;
         syncHeader();
     }
 
     function onChangeModel(event: any) {
-        controller.target_model = Number(event.target.value ?? -1);
+        setTargetModel(event.target.value);
+        controller.target_model = event.target.value;
         syncHeader();
     }
 
@@ -261,11 +297,11 @@ const Linebalancing = () => {
                     <div className="grid grid-cols-5 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700">Line</label>
-                            <Select value={controller.target_line} onChange={onChangeLine} className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                            <Select value={target_line} onChange={onChangeLine} className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
                                 <option value="">Select</option>
                                 {lines?.map((obj, i) => {
                                     return (
-                                        <option value={i} key={i}>
+                                        <option value={obj.code} key={i}>
                                             {obj.name}: {obj.code}
                                         </option>
                                     );
@@ -274,11 +310,11 @@ const Linebalancing = () => {
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700">Model/Style</label>
-                            <Select value={controller.target_model} onChange={onChangeModel} className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                            <Select value={target_model} onChange={onChangeModel} className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
                                 <option value="">Select</option>
                                 {models?.map((obj, i) => {
                                     return (
-                                        <option value={i} key={i}>
+                                        <option value={obj.code} key={i}>
                                             {obj.name}: {obj.code}
                                         </option>
                                     );
@@ -290,7 +326,7 @@ const Linebalancing = () => {
                             <Input
                                 type="number"
                                 className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                                value={taktTime ? taktTime.toFixed(3) : ''}
+                                value={taktTime ? taktTime.toFixed(3) : '0'}
                                 onChange={onChangeTaktTime}
                                 disabled={!lineHeader}
                             />
@@ -300,7 +336,7 @@ const Linebalancing = () => {
                             <Input
                                 type="number"
                                 className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                                value={unitPerHour ? unitPerHour.toFixed(0) : ''}
+                                value={unitPerHour ? unitPerHour.toFixed(0) : '0'}
                                 onChange={onChangeUnitPerHour}
                                 disabled={!lineHeader}
                             />
@@ -310,7 +346,7 @@ const Linebalancing = () => {
                             <Input
                                 type="number"
                                 className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                                value={totalCycleTime ? totalCycleTime.toFixed(3) : ''}
+                                value={totalCycleTime ? totalCycleTime.toFixed(3) : '0'}
                                 disabled={true}
                             />
                         </div>

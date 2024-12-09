@@ -5,6 +5,28 @@ import { AppConfig } from "../configs/config";
 export class LineBalancingAPI {
     static path: string = '/new-line';
 
+    static getHeader(line_header_id: string): Promise<any> {
+        return new Promise((resolve, reject) => {
+            const config = {
+                method: 'get',
+                maxBodyLength: Infinity,
+                url: `${AppConfig.getAPIPath()}${this.path}/header/${line_header_id}`,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+            };
+
+            axios.request(config)
+                .then((response) => {
+                    resolve(response.data);
+                })
+                .catch((error) => {
+                    reject(error);
+                });
+
+        });
+    }
+
     static syncHeader(user_id: string, workspace_id: string, line_code: string, model_code: string): Promise<any> {
         return new Promise((resolve, reject) => {
             const data = JSON.stringify({

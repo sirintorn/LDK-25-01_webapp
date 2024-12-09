@@ -12,8 +12,8 @@ export class LineBalancingController{
     user_id?: string;
     workspace_id?: string;
 
-    target_line?: number;
-    target_model?: number;
+    target_line?: string;
+    target_model?: string;
 
     line_header?: any;
     line_details?: any[];
@@ -46,15 +46,37 @@ export class LineBalancingController{
                 const res = await LineBalancingAPI.syncHeader(
                     this.user_id!,
                     this.workspace_id!,
-                    this.lines![this.target_line!].code,
-                    this.models![this.target_model!].code
+                    this.target_line ?? 'unknown',
+                    this.target_model ?? 'unknown'
+                );   
+                this.line_header = res.line_header;
+
+                const res2 = await LineBalancingAPI.getDetailsByHeader(this.line_header._id);
+                this.line_details = res2.line_details;
+            } catch (error) {
+                console.log(error);
+            }
+        }
+
+        this.isLoading = false;
+    }
+
+    async loadHeader(hid: string){
+        this.isLoading = true;
+        this.isLoading = false;
+        if(hid){
+            console.log('ready');
+            try {
+                const res = await LineBalancingAPI.getHeader(
+                    hid
                 );   
                 this.line_header = res.line_header;
 
                 const res2 = await LineBalancingAPI.getDetailsByHeader(this.line_header._id);
                 this.line_details = res2.line_details;
 
-                console.log(this.lines![this.target_line!].code, this.models![this.target_model!].code);
+                this.target_line = this.line_header.line_code;
+                this.target_model = this.line_header.model_code;
             } catch (error) {
                 console.log(error);
             }
@@ -75,7 +97,7 @@ export class LineBalancingController{
     }
 
     validateReady(){
-        return (!isNaN(this.target_line ?? -1) && !isNaN(this.target_model ?? -1)) && (((this.target_line ?? -1) > -1) && ((this.target_model ?? -1) > -1));
+        return (this.target_line  && this.target_model);
     }
 
     async deleteDetails(ids: any[]){

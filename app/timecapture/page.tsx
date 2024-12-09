@@ -127,11 +127,23 @@ const TimeCapture = () => {
                 // AppSession.storeUser(res.user);
                 // AppSession.storeWorkspaces(res.workspaces);
                 // window.location.assign('/dashboard');
+                /*AppSession.storeLastConfig({
+                    line_balancing: {
+                        hid: hid
+                    }
+                });*/
+                window.location.assign(`/linebalancing?uid=${uid}&wid=${wid}&hid=${hid}`)
             }).catch(error => {
                 console.log('ERR: ' + error);
                 setErrorString('ERR: ' + error);
 
                 setIsLoading(false);
+                /*AppSession.storeLastConfig({
+                    line_balancing: {
+                        hid: hid
+                    }
+                });*/
+                //window.location.assign(`/linebalancing?uid=${uid}&wid=${wid}&hid=${hid}`)
             });
         } else if (xnw == '0' && id && uid && wid && hid) {
             LineBalancingAPI.editDetail(id, {
@@ -143,7 +155,7 @@ const TimeCapture = () => {
             }).then((response) => {
                 setIsLoading(false);
                 setErrorString(response.message);
-
+                window.location.assign(`/linebalancing?uid=${uid}&wid=${wid}&hid=${hid}`)
             }).catch(error => {
                 console.log('ERR: ' + error);
                 setErrorString('ERR: ' + error);
@@ -187,76 +199,60 @@ const TimeCapture = () => {
     }
 
     return (
-            <>
-                <NavBar user={user} path="/linebalancing" />
-                <div className="flex flex-col items-center">
-                    <div className="font-bold text-black"><span className='text-[200px]'>{formatTime()}</span></div>
-                    <div className="flex space-x-4 mt-4">
-                        <button onClick={isStarted ? stop : start}
-                            className="px-6 py-2 bg-green-500 text-white rounded-md shadow-md hover:bg-green-600 transition"
-                        >
-                            Start/Stop
-                        </button>
-                        <button onClick={reset}
-                            className="px-6 py-2 bg-red-500 text-white rounded-md shadow-md hover:bg-red-600 transition"
-                        >
-                            Reset
-                        </button>
-                    </div>
+        <>
+            <NavBar user={user} path="/linebalancing" />
+            <div className="mt-4 pl-32 pr-24 grid grid-cols-4 gap-6 mt-4 place-items-start">
+                <div>
+                    <label className="block text-sm font-medium text-gray-700">Operation Code</label>
+                    <Input
+                        type="text"
+                        onChange={(e) => setStepCode(e.target.value)}
+                        value={stepCode}
+                        className="w-60 px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    />
                 </div>
-                <div className="mt-20 pl-32 pr-24 grid grid-cols-3 gap-6 mt-4 place-items-start h-56">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Step Code</label>
-                        <Input
-                            type="text"
-                            onChange={(e) => setStepCode(e.target.value)}
-                            value={stepCode}
-                            className="w-60 px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Station</label>
-                        <Input
-                            type="text"
-                            onChange={(e) => setStation(e.target.value)}
-                            value={station}
-                            className="w-60 px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Employee</label>
-                        <Input
-                            type="text"
-                            onChange={(e) => setEmployee(e.target.value)}
-                            value={employee}
-                            className="w-60 px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Cycle Time</label>
-                        <Input
-                            readOnly={true}
-
-                            type="text"
-                            value={cycleTime}
-                            onChange={(e) => setCycleTime(e.target.value)}
-                            className="w-60 px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Description</label>
-                        <Input
-                            type="text"
-                            onChange={(e) => setDescription(e.target.value)}
-                            value={description}
-                            className="w-96 px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                        />
-                    </div>
+                <div>
+                    <label className="block text-sm font-medium text-gray-700">Operation Description</label>
+                    <Input
+                        type="text"
+                        onChange={(e) => setDescription(e.target.value)}
+                        value={description}
+                        className="w-96 px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    />
                 </div>
-                <div className="p-8">
+            </div>
+            <div className="pl-32 pr-24 grid grid-cols-4 gap-6 mt-4 place-items-start">
+                <div>
+                    <label className="block text-sm font-medium text-gray-700">Station</label>
+                    <Input
+                        type="text"
+                        onChange={(e) => setStation(e.target.value)}
+                        value={station}
+                        className="w-60 px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    />
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-gray-700">Cycle Time</label>
+                    <Input
+                        readOnly={true}
 
+                        type="text"
+                        value={cycleTime}
+                        onChange={(e) => setCycleTime(e.target.value)}
+                        className="w-60 px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    />
+                </div>
+
+                <div>
+                    <label className="block text-sm font-medium text-gray-700">Employee</label>
+                    <Input
+                        type="text"
+                        onChange={(e) => setEmployee(e.target.value)}
+                        value={employee}
+                        className="w-60 px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    />
+                </div>
+                <div className="justify-end">
                     <div className="flex gap-4 col-span-3 space-x-4 mt-5 justify-end">
                         {isLoading ? <button
                             className="px-6 py-2 bg-gray-50 text-gray-600 rounded-md shadow-md "
@@ -278,9 +274,25 @@ const TimeCapture = () => {
 
                         </div>
                     </div>
-
                 </div>
-            </>
+            </div>
+            <div className="mt-24 flex flex-col items-center">
+                <div className="font-bold text-black"><span className='text-[200px]'>{formatTime()}</span></div>
+                <div className="flex space-x-4 mt-4">
+                    <button onClick={isStarted ? stop : start}
+                        className="px-6 py-2 bg-green-500 text-white rounded-md shadow-md hover:bg-green-600 transition"
+                    >
+                        Start/Stop
+                    </button>
+                    <button onClick={reset}
+                        className="px-6 py-2 bg-red-500 text-white rounded-md shadow-md hover:bg-red-600 transition"
+                    >
+                        Reset
+                    </button>
+                </div>
+            </div>
+
+        </>
     );
 };
 
