@@ -12,6 +12,7 @@ import { ILineDetail } from '@/models/m_line_detail';
 const TimeCapture = () => {
     const [isRunning, setIsRunning] = useState(false);
     const [elapsedTime, setElapsedTime] = useState(0);
+
     const [description, setDescription] = useState<string>('');
     const [station, setStation] = useState<string>('');
     const [employee, setEmployee] = useState<string>('');
@@ -44,17 +45,17 @@ const TimeCapture = () => {
     }, [lineDetail]);
 
     const stepDuration = 60; // Each step is 60 ms
-    let currentStep = 0;
+    let countStep = 0;
 
     useEffect(() => {
         if (isRunning) {
-            /*intervalIdRef.current = setInterval(() => {
-                setElapsedTime(Date.now() - startTimeRef.current);
-            }, 10);
-            */
+            if (elapsedTime > 0) {
+                countStep = elapsedTime;
+            }
             intervalIdRef.current = setInterval(() => {
-                currentStep++;
-                setElapsedTime(currentStep);
+
+                countStep++;
+                setElapsedTime(countStep);
             }, stepDuration);
         }
         return () => {
@@ -78,6 +79,7 @@ const TimeCapture = () => {
         setIsRunning(true);
         setIsStarted(true);
         startTimeRef.current = Date.now() - elapsedTime;
+
         setErrorString('');
 
     }
@@ -97,6 +99,16 @@ const TimeCapture = () => {
         setErrorString('');
     }
 
+
+    function formatTime() {
+        const seconds = Math.floor(elapsedTime / (1000) % 60);
+        const milliseconds = Math.floor((elapsedTime % 1000));
+
+        const seconds_str = String(seconds).padStart(2, "0");
+        const milliseconds_str = String(milliseconds).padStart(3, "0");
+
+        return `${seconds_str}.${milliseconds_str}`;
+    }
 
     const handleCreateDetail = (event: React.FormEvent) => {
         event.preventDefault();
@@ -159,20 +171,9 @@ const TimeCapture = () => {
             }).catch(error => {
                 console.log('ERR: ' + error);
                 setErrorString('ERR: ' + error);
-
                 setIsLoading(false);
             });
         }
-    }
-
-    function formatTime() {
-        const seconds = Math.floor(elapsedTime / (1000) % 60);
-        const milliseconds = Math.floor((elapsedTime % 1000));
-
-        const seconds_str = String(seconds).padStart(2, "0");
-        const milliseconds_str = String(milliseconds).padStart(3, "0");
-
-        return `${seconds_str}.${milliseconds_str}`;
     }
 
 
@@ -231,6 +232,17 @@ const TimeCapture = () => {
                         className="w-60 px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                     />
                 </div>
+
+
+                <div>
+                    <label className="block text-sm font-medium text-gray-700">Employee</label>
+                    <Input
+                        type="text"
+                        onChange={(e) => setEmployee(e.target.value)}
+                        value={employee}
+                        className="w-60 px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    />
+                </div>
                 <div>
                     <label className="block text-sm font-medium text-gray-700">Cycle Time</label>
                     <Input
@@ -239,16 +251,6 @@ const TimeCapture = () => {
                         type="text"
                         value={cycleTime}
                         onChange={(e) => setCycleTime(e.target.value)}
-                        className="w-60 px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                    />
-                </div>
-
-                <div>
-                    <label className="block text-sm font-medium text-gray-700">Employee</label>
-                    <Input
-                        type="text"
-                        onChange={(e) => setEmployee(e.target.value)}
-                        value={employee}
                         className="w-60 px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                     />
                 </div>
