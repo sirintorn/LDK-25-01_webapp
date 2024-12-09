@@ -422,8 +422,8 @@ const Linebalancing = () => {
                                     <thead>
                                         <tr className="bg-gray-200">
                                             <th className="px-4 py-2 border">No</th>
-                                            <th className="px-4 py-2 border">Step Code</th>
-                                            <th className="px-4 py-2 border">Description</th>
+                                            <th className="px-4 py-2 border">Operation Code</th>
+                                            <th className="px-4 py-2 border">Operation Description</th>
                                             <th className="px-4 py-2 border">Station</th>
                                             <th className="px-4 py-2 border">Employee</th>
                                             <th className="px-4 py-2 border">Cycle Time</th>

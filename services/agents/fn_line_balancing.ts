@@ -34,20 +34,40 @@ export class FnLineBalancing{
     static findCycleTimeMax(lineDetails: ILineDetail[]){
         let cycle_time_max = 0;
         let target_index = -1;
+        let target_station = '';
+
+        const stations: any = {};
 
         if(lineDetails && lineDetails.length > 0){
             for (let i = 0; i < lineDetails.length; i++) {
                 const item = lineDetails[i];
-                if(item.cycle_time > cycle_time_max){
-                    cycle_time_max = item.cycle_time;
-                    target_index = i
+
+                if(!stations[item.station]){
+                    stations[item.station] = {
+                        cycle_time_max: 0,
+                        target_index: i,
+                        station: item.station
+                    };
+                }
+
+                stations[item.station].cycle_time_max += item.cycle_time;
+                stations[item.station].target_index++;
+            }
+
+            for (let key in stations) {
+                const item = stations[key];
+                if(item.cycle_time_max > cycle_time_max){
+                    cycle_time_max = item.cycle_time_max;
+                    target_index = item.target_index;
+                    target_station = item.station;
                 }
             }
         }
 
         return {
             cycle_time_max: cycle_time_max,
-            target_index: target_index
+            target_index: target_index,
+            target_station: target_station
         };
     }
 
@@ -79,11 +99,16 @@ export class FnLineBalancing{
     //6.
     static findBottleneckStation(lineDetails: ILineDetail[]){
         let ctMax = this.findCycleTimeMax(lineDetails);
-        if(ctMax.target_index != -1){
+        /*if(ctMax.target_index != -1){
             return lineDetails[ctMax.target_index].station;
         }else{
             return null;
-        }
+        }*/
+       if(ctMax.target_station){
+        return ctMax.target_station
+       }else{
+        return null;
+       }
     }
 
     //7.

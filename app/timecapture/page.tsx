@@ -123,65 +123,68 @@ const TimeCapture = () => {
             time = lineDetail?.cycle_time ?? 0;
         }
 
-        console.log(time);
-
-        if (xnw == '1' && uid && wid && hid) {
-            LineBalancingAPI.createDetail(
-                uid,
-                wid,
-                hid,
-                time,
-                description,
-                employee,
-                station,
-                stepCode
-            ).then((response) => {
-                setIsLoading(false);
-                setErrorString(response.message);
-
-                // AppSession.storeUser(res.user);
-                // AppSession.storeWorkspaces(res.workspaces);
-                // window.location.assign('/dashboard');
-                /*AppSession.storeLastConfig({
-                    line_balancing: {
-                        hid: hid
-                    }
-                });*/
-                window.location.assign(`/linebalancing?uid=${uid}&wid=${wid}&hid=${hid}`)
-            }).catch(error => {
-                console.log('ERR: ' + error);
-                setErrorString('ERR: ' + error);
-
-                setIsLoading(false);
-                /*AppSession.storeLastConfig({
-                    line_balancing: {
-                        hid: hid
-                    }
-                });*/
-                //window.location.assign(`/linebalancing?uid=${uid}&wid=${wid}&hid=${hid}`)
-            });
-        } else if (xnw == '0' && id && uid && wid && hid) {
-            LineBalancingAPI.editDetail(id, {
-                "cycle_time": time,
-                "description": description,
-                "employee": employee,
-                "station": station,
-                "step_code": stepCode
-            }).then((response) => {
-                setIsLoading(false);
-                setErrorString(response.message);
-                window.location.assign(`/linebalancing?uid=${uid}&wid=${wid}&hid=${hid}`)
-            }).catch(error => {
-                console.log('ERR: ' + error);
-                setErrorString('ERR: ' + error);
-                setIsLoading(false);
-            });
+        if(stepCode && station){
+            if (xnw == '1' && uid && wid && hid) {
+                LineBalancingAPI.createDetail(
+                    uid,
+                    wid,
+                    hid,
+                    time,
+                    description,
+                    employee,
+                    station,
+                    stepCode
+                ).then((response) => {
+                    setIsLoading(false);
+                    setErrorString(response.message);
+    
+                    // AppSession.storeUser(res.user);
+                    // AppSession.storeWorkspaces(res.workspaces);
+                    // window.location.assign('/dashboard');
+                    /*AppSession.storeLastConfig({
+                        line_balancing: {
+                            hid: hid
+                        }
+                    });*/
+                    window.location.assign(`/linebalancing?uid=${uid}&wid=${wid}&hid=${hid}`)
+                }).catch(error => {
+                    console.log('ERR: ' + error);
+                    setErrorString('ERR: ' + error);
+    
+                    setIsLoading(false);
+                    /*AppSession.storeLastConfig({
+                        line_balancing: {
+                            hid: hid
+                        }
+                    });*/
+                    //window.location.assign(`/linebalancing?uid=${uid}&wid=${wid}&hid=${hid}`)
+                });
+            } else if (xnw == '0' && id && uid && wid && hid) {
+                LineBalancingAPI.editDetail(id, {
+                    "cycle_time": time,
+                    "description": description,
+                    "employee": employee,
+                    "station": station,
+                    "step_code": stepCode
+                }).then((response) => {
+                    setIsLoading(false);
+                    setErrorString(response.message);
+                    window.location.assign(`/linebalancing?uid=${uid}&wid=${wid}&hid=${hid}`)
+                }).catch(error => {
+                    console.log('ERR: ' + error);
+                    setErrorString('ERR: ' + error);
+                    setIsLoading(false);
+                });
+            }
+        }else{
+            alert('Please fill the data on Operation Code and Station inputs.');
+            setIsLoading(false);
         }
     }
 
 
     function bacgPage() {
-        window.location.assign(`/linebalancing?uid=${uid}&wid=${wid}`)
+        window.location.assign(`/linebalancing?uid=${uid}&wid=${wid}&hid=${hid}`)
     }
 
     async function loadDetail() {
@@ -207,7 +210,7 @@ const TimeCapture = () => {
             <NavBar user={user} path="/linebalancing" />
             <div className="mt-4 pl-32 pr-24 grid grid-cols-4 gap-6 mt-4 place-items-start">
                 <div>
-                    <label className="block text-sm font-medium text-gray-700">Operation Code</label>
+                    <label className="block text-sm font-medium text-gray-700">Operation Code <span className='text-red-600'>(*)</span></label>
                     <Input
                         type="text"
                         onChange={(e) => setStepCode(e.target.value)}
@@ -227,7 +230,7 @@ const TimeCapture = () => {
             </div>
             <div className="pl-32 pr-24 grid grid-cols-4 gap-6 mt-4 place-items-start">
                 <div>
-                    <label className="block text-sm font-medium text-gray-700">Station</label>
+                    <label className="block text-sm font-medium text-gray-700">Station <span className='text-red-600'>(*)</span></label>
                     <Input
                         type="text"
                         onChange={(e) => setStation(e.target.value)}
