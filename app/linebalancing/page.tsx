@@ -283,7 +283,7 @@ const Linebalancing = () => {
                 }
                 console.log(ids);
                 await controller.deleteDetails(ids);
-                window.location.assign(`/linebalancing?uid=${uid}&wid=${wid}&hid=${hid}`);
+                window.location.assign(`/linebalancing?uid=${user._id}&wid=${workspaces[appController.targetWorkspace]._id}&hid=${lineHeader._id}`);
             } catch (error) {
                 console.log(error);
             }
