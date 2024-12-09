@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build && cp dist.env ./out/.env && cp dist.docker-compose.yml ./out/docker-compose.yml && cp dist.Dockerfile ./out/Dockerfile && cp dist.dockerignore ./out/.dockerignore",
     "start": "next start",
     "lint": "next lint"
   },
@@ -15,9 +15,9 @@
     "chart.js": "^4.4.7",
     "chartjs-plugin-annotation": "^3.1.0",
     "mongoose": "^8.8.4",
-    "next": "15.0.3",
-    "react": "19.0.0-rc-66855b96-20241106",
-    "react-dom": "19.0.0-rc-66855b96-20241106"
+    "next": "^14.2.5",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "@types/chart.js": "^2.9.41",
