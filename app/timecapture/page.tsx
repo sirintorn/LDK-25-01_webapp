@@ -114,11 +114,14 @@ const TimeCapture = () => {
         event.preventDefault();
         setErrorString('');
         //window.location.assign('/dashboard');
-
         setIsLoading(true);
+
         const seconds = Math.floor(elapsedTime / (1000));
         const milliseconds = Math.floor((elapsedTime % 1000));
-        const time = seconds + (milliseconds / 1000);
+        let time = seconds + (milliseconds / 1000);
+        if(elapsedTime <= 0 && xnw == '0'){
+            time = lineDetail?.cycle_time ?? 0;
+        }
 
         console.log(time);
 
@@ -187,7 +190,7 @@ const TimeCapture = () => {
             const res = await LineBalancingAPI.getDetail(id!);
             const detail: ILineDetail = res.line_detail;
             setLineDetail(res.line_detail);
-            setElapsedTime(detail.cycle_time * 1000);
+            //setElapsedTime(detail.cycle_time * 1000);
             setDescription(detail.description ?? '');
             setStation(detail.station);
             setEmployee(detail.employee ?? '');
