@@ -269,7 +269,7 @@ const Linebalancing = () => {
         setLineDetailsChecks(lineDetailsChecks);
     }
 
-    function onClickDelete() {
+    async function onClickDelete() {
         const ids = [];
         if (confirm('Are you sure?')) {
             try {
@@ -282,7 +282,8 @@ const Linebalancing = () => {
                     }
                 }
                 console.log(ids);
-                controller.deleteDetails(ids);
+                await controller.deleteDetails(ids);
+                window.location.assign(`/linebalancing?uid=${uid}&wid=${wid}&hid=${hid}`);
             } catch (error) {
                 console.log(error);
             }
