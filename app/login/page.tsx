@@ -101,3 +101,7 @@ const LoginPage: React.FC = () => {
 
 export default LoginPage;
 
+/*
+email: developer@theintegrator.co.th
+pass: devIntegrator2024!
+*/

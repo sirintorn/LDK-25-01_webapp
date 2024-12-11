@@ -6,7 +6,7 @@ export class AppConfig{
     //static ENV: string = process.env.NODE_ENV || "development";
     static ENV: string = "production";
     
-    static APP_VERSION: string = 'v0.01.02 20241209';
+    static APP_VERSION: string = 'v0.01.03 20241211';
     static APP_NAME: string = 'Lean Digital Tool Kits';
 
     static getAPIPath(): string{

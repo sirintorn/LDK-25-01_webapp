@@ -240,7 +240,8 @@ const Linebalancing = () => {
     }
 
     function onChangeTaktTime(event: any) {
-        const val1 = Number(event.target.value ?? -1);
+        console.log('onChangeTakttime is temporarily disabled', event);
+        /*const val1 = Number(event.target.value ?? -1);
         const val2 = FnLineBalancing.taktTimeToUnitPerHour(val1);
         controller.line_header.takt_time = val1;
         controller.line_header.unit_per_hour = val2;
@@ -248,7 +249,7 @@ const Linebalancing = () => {
         setTaktTime(controller.line_header.takt_time);
         setUnitPerHour(controller.line_header.unit_per_hour);
         const chartData = ChartGen.smartGenerateChartData(controller.line_header.takt_time ?? 0, controller.line_details ?? []);
-        setChartData(chartData);
+        setChartData(chartData);*/
     }
 
     function onChangeUnitPerHour(event: any) {
@@ -329,7 +330,7 @@ const Linebalancing = () => {
                                 className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                                 value={taktTime ? taktTime.toFixed(3) : '0'}
                                 onChange={onChangeTaktTime}
-                                disabled={!lineHeader}
+                                disabled={true}
                             />
                         </div>
                         <div>
